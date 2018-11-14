@@ -5,7 +5,7 @@ import os
 import psutil
 
 def main(stdscr):
-    heigh = 22; width = 80
+    heigh = 40; width = 80
     pad_x = 2; pad_y = 3
     stdscr = curses.initscr()
     curses.start_color()
@@ -36,21 +36,29 @@ def main(stdscr):
 
         """---   Collecting Memory info   ---"""
         mem = psutil.virtual_memory()
-        win.addstr(18, 0, 'Memory Usage: ' + str(mem.percent) + '%')
+        win.addstr(18, 0,
+            ('Total Memory: ' + "{:2.2f}G".format(mem.total/(1024 ** 3))) + ' ' +
+            ('Cache: ' + "{:2.2f}G".format(mem.cached/(1024 ** 3))).rjust(15)
+            )
+        win.addstr(19, 0,
+            'Memory Usage: ' + str(mem.percent) + '%' + '  ' +
+            ('Active Memory: ' + "{:2.2f}G".format(mem.active/(1024 ** 3))).rjust(22) + ' ' +
+            ('Inactive Memory: ' + "{:2.2f}G".format(mem.inactive/(1024 ** 3))).rjust(25)
+            )
         for x in range(50):
-            win.addstr(19,2+x,' ', curses.color_pair(1))
+            win.addstr(20,2+x,' ', curses.color_pair(1))
         for x in range(int(mem.percent/2)):
-            win.addstr(19,2+x,' ', curses.color_pair(1+int(mem.percent/25)))
-        win.addstr(18, 22, 'Cache: ' + str(mem.cached).rjust(10))
+            win.addstr(20,2+x,' ', curses.color_pair(1+int(mem.percent/25)))
+        #win.addstr(18, 22, )
 
         """---   Collecting swap info   ---"""
         swp = psutil.swap_memory()
-        win.addstr(20, 0, 'Swap Usage: ' + str(swp.percent) + '%')
-        win.addstr(20, 22, 'Tamanho do Swap: ' + str(swp.total/1000000)[:3] + 'GB')
+        win.addstr(22, 0, 'Swap Usage: ' + str(swp.percent) + '%')
+        win.addstr(22, 22, 'Tamanho do Swap: ' + "{:2.2f}G".format(swp.total/(1024 ** 3)))
         for x in range(50):
-            win.addstr(21,2+x,' ', curses.color_pair(1))
+            win.addstr(23,2+x,' ', curses.color_pair(1))
         for x in range(int(swp.percent/2)):
-            win.addstr(21,2+x,' ', curses.color_pair(1+int(swp.percent/25)))
+            win.addstr(23,2+x,' ', curses.color_pair(1+int(swp.percent/25)))
         
         """------       Collecting Processes Data      ------"""
         if ord_by == 'mem':
@@ -65,6 +73,9 @@ def main(stdscr):
         win.addstr(0, 6, 'comando'.rjust(16))# PID label
         if ord_by == 'mem':
             win.addstr(0, 22, '% Memoria'.rjust(10))
+        elif ord_by == 'cpu':
+            win.addstr(0, 22, '% Cpu'.rjust(10))
+
         # selected process (highlighted)
         win.addstr(1, 0, lines[pFltInit].split()[0].rjust(6), curses.color_pair(5))
         win.addstr(1, 7, lines[pFltInit].split()[4].rjust(15), curses.color_pair(5))
