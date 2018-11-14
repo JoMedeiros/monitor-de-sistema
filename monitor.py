@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import curses
 from curses import wrapper
 import os
@@ -37,13 +37,13 @@ def main(stdscr):
         """---   Collecting Memory info   ---"""
         mem = psutil.virtual_memory()
         win.addstr(18, 0,
-            ('Total Memory: ' + "{:2.2f}G".format(mem.total/(1024 ** 3))) + ' ' +
-            ('Cache: ' + "{:2.2f}G".format(mem.cached/(1024 ** 3))).rjust(15)
+            ('Total Memory: ' + "{:2.2f}G".format(mem.total/1024.0 ** 3)) + ' ' +
+            ('Cache: ' + "{:2.2f}G".format(mem.cached/(1024 ** 3.0))).rjust(15)
             )
         win.addstr(19, 0,
             'Memory Usage: ' + str(mem.percent) + '%' + '  ' +
-            ('Active Memory: ' + "{:2.2f}G".format(mem.active/(1024 ** 3))).rjust(22) + ' ' +
-            ('Inactive Memory: ' + "{:2.2f}G".format(mem.inactive/(1024 ** 3))).rjust(25)
+            ('Active Memory: ' + "{:2.2f}G".format(float(mem.active)/(1024 ** 3))).rjust(22) + ' ' +
+            ('Inactive Memory: ' + "{:2.2f}G".format(float(mem.inactive)/(1024 ** 3))).rjust(25)
             )
         for x in range(50):
             win.addstr(20,2+x,' ', curses.color_pair(1))
