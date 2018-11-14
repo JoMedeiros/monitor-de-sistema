@@ -5,14 +5,14 @@ import os
 import psutil
 
 def main(stdscr):
-    heigh = 20; width = 80
+    heigh = 22; width = 80
     pad_x = 2; pad_y = 3
     stdscr = curses.initscr()
     curses.start_color()
     curses.init_pair(1, 2, 7)
-    curses.init_pair(2, 6, 7)
-    curses.init_pair(3, 3, 7)
-    curses.init_pair(4, 1, 7)
+    curses.init_pair(2, 7, 6)
+    curses.init_pair(3, 7, 3)
+    curses.init_pair(4, 7, 1)
     curses.init_pair(5, 0, 7)
 
     win = curses.newwin(heigh, width)
@@ -23,7 +23,7 @@ def main(stdscr):
 
     key = curses.KEY_RIGHT
     ord_by = 'pid'
-    fields = 'pid,%mem,min_flt,maj_flt,comm'
+    fields = 'pid,%mem,min_flt,maj_flt,comm,%cpu'
     f = os.popen('ps -eo '+fields)
     pFltInit = 1 # page fault list init to be shown
     """--  Main Loop  --"""
@@ -40,8 +40,18 @@ def main(stdscr):
         for x in range(50):
             win.addstr(19,2+x,' ', curses.color_pair(1))
         for x in range(int(mem.percent/2)):
-            win.addstr(19,2+x,'@', curses.color_pair(1+int(mem.percent/25)))
+            win.addstr(19,2+x,' ', curses.color_pair(1+int(mem.percent/25)))
+        win.addstr(18, 22, 'Cache: ' + str(mem.cached).rjust(10))
 
+        """---   Collecting swap info   ---"""
+        swp = psutil.swap_memory()
+        win.addstr(20, 0, 'Swap Usage: ' + str(swp.percent) + '%')
+        win.addstr(20, 22, 'Tamanho do Swap: ' + str(swp.total/1000000)[:3] + 'GB')
+        for x in range(50):
+            win.addstr(21,2+x,' ', curses.color_pair(1))
+        for x in range(int(swp.percent/2)):
+            win.addstr(21,2+x,' ', curses.color_pair(1+int(swp.percent/25)))
+        
         """------       Collecting Processes Data      ------"""
         if ord_by == 'mem':
             f = os.popen('ps -eo '+fields+' --sort -rss')
@@ -52,15 +62,26 @@ def main(stdscr):
         table = f.read()
         lines = table.split('\n')
         win.addstr(0, 0, lines[0].split()[0].rjust(6))# PID label
-        win.addstr(0, 6, 'comando'.rjust(10))# PID label
-        #selected
+        win.addstr(0, 6, 'comando'.rjust(16))# PID label
+        if ord_by == 'mem':
+            win.addstr(0, 22, '% Memoria'.rjust(10))
+        # selected process (highlighted)
         win.addstr(1, 0, lines[pFltInit].split()[0].rjust(6), curses.color_pair(5))
-        win.addstr(1, 7, lines[pFltInit].split()[4], curses.color_pair(5))
-        #others
-        for i in range(1,heigh-4):
+        win.addstr(1, 7, lines[pFltInit].split()[4].rjust(15), curses.color_pair(5))
+        if ord_by == 'mem':
+            win.addstr(1, 25, lines[pFltInit].split()[1].rjust(6), curses.color_pair(5))
+        elif ord_by == 'cpu':
+            win.addstr(1, 25, lines[pFltInit].split()[-1].rjust(6), curses.color_pair(5))
+        # others
+        for i in range(1,16):
             l = lines[i + pFltInit].split()
             win.addstr(i+1, 0, l[0].rjust(6))
-            win.addstr(i+1, 7, l[4])
+            win.addstr(i+1, 7, l[4].rjust(15))
+            if ord_by == 'mem':
+                win.addstr(i+1, 25, l[1].rjust(6))
+            elif ord_by == 'cpu':
+                win.addstr(i+1, 25, l[-1].rjust(6))
+        
 
         """- Selected Process information -"""
         ff = os.popen('ps -p ' + lines[pFltInit].split()[0] + ' -eo pid,min_flt,maj_flt')
